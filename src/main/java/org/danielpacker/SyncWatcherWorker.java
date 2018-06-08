@@ -105,16 +105,7 @@ public class SyncWatcherWorker implements Callable<Void> {
         this.trace = true;
     }
 
-    private void addTaskIfNeeded(String eventType, Path path) throws IOException {
-
-        //System.out.println("Type: " + eventType + ", Path: " + path);
-        Path equivPath;
-        if (path.toString().indexOf(dir1.toString()) == 0)
-            equivPath = SyncUtil.srcTodestPath(path, dir1, dir2);
-        else
-            equivPath = SyncUtil.srcTodestPath(path, dir2, dir1);
-
-        //System.out.println("equivPath: " + equivPath);
+    private boolean taskIsNeeded(String eventType, Path path, Path equivPath) {
 
         // Ignore this path until another task acts on it
         if (eventType.equals("ENTRY_CREATE")) {
@@ -122,13 +113,13 @@ public class SyncWatcherWorker implements Callable<Void> {
             if (SyncUtil.getOS() == SyncUtil.OS.LINUX
                     && !Files.isDirectory(path)) {
                 log.debug("IGNORED (ALWAYS) CREATE ON LINUX FILES for path: " + path);
-                return;
+                return false;
             }
 
             if (ignoreNextCreate.getOrDefault(path, 0) > 0) {
                 ignoreNextCreate.put(path, ignoreNextCreate.get(path) - 1);
                 log.debug("IGNORED SUBSEQUENT CREATE FOR path: " + path);
-                return;
+                return false;
             } else {
                 log.debug("WILL IGNORE SUBSEQUENT CREATE FOR equivPath: " + equivPath);
                 ignoreNextCreate.put(equivPath, 1);
@@ -139,7 +130,7 @@ public class SyncWatcherWorker implements Callable<Void> {
             if (ignoreNextModify.getOrDefault(path, 0) > 0) {
                 ignoreNextModify.put(path, ignoreNextModify.get(path) - 1);
                 log.debug("IGNORED SUBSEQUENT MODIFY FOR path: " + path);
-                return;
+                return false;
             } else {
                 log.debug("WILL IGNORE SUBSEQUENT MODIFY FOR equivPath: " + equivPath);
                 ignoreNextModify.put(equivPath, ignoreNextModify.getOrDefault(equivPath, 0) + 1);
@@ -158,10 +149,14 @@ public class SyncWatcherWorker implements Callable<Void> {
             if (ignoreNextDelete.getOrDefault(path, 0) > 0) {
                 ignoreNextDelete.put(path, ignoreNextDelete.get(path) - 1);
                 log.debug("IGNORED SUBSEQUENT DELETE FOR path: " + path);
-                return;
+                return false;
             }
         }
+        return true;
+    }
 
+
+    private void addTask(String eventType, Path path, Path equivPath) throws IOException {
 
         switch (eventType) {
 
@@ -233,8 +228,16 @@ public class SyncWatcherWorker implements Callable<Void> {
                 // print out event
                 log.debug(String.format("%s: %s", event.kind().name(), child));
 
+                //System.out.println("Type: " + eventType + ", Path: " + path);
+                Path equivPath;
+                if (child.toString().indexOf(dir1.toString()) == 0)
+                    equivPath = SyncUtil.srcTodestPath(child, dir1, dir2);
+                else
+                    equivPath = SyncUtil.srcTodestPath(child, dir2, dir1);
+
                 try {
-                    addTaskIfNeeded(event.kind().name(), child);
+                    if (taskIsNeeded(event.kind().name(), child, equivPath))
+                        addTask(event.kind().name(), child, equivPath);
                 }
                 catch (IOException e) {
                     log.error("File exception during watching: " + e.getMessage());

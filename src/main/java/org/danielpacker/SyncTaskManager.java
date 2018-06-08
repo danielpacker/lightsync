@@ -70,6 +70,7 @@ public class SyncTaskManager {
         //new Thread(new SyncTaskDoerWorker(config, q));
     }
 
+    // Leaving this here for debugging during development.
     public void displayTasks() {
 
         SyncTask[] tasks = new SyncTask[q.size()];
