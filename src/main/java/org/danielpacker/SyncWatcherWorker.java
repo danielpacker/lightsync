@@ -214,7 +214,12 @@ public class SyncWatcherWorker implements Callable<Void> {
             for (WatchEvent<?> event: key.pollEvents()) {
                 WatchEvent.Kind kind = event.kind();
 
-                // TBD - provide example of how OVERFLOW event is handled
+                // Due to a hard-coded limit of 512 queued events
+                //  in AbstractKeyWatcher, overflows are fairly common.
+                // If >512 files are modified simultaneously in one wached
+                //  directory, it will overflow and lose events. The comments
+                //  suggest that this maybe tunable in a future version of Watch Service.
+                //  As of Java 9, the value is hard-coded.
                 if (kind == OVERFLOW) {
                     log.error("OVERFLOW!!!");
                     throw new SyncOverflowException("OVERFLOWED!!!");
