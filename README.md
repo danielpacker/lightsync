@@ -44,6 +44,7 @@ gradle clean build run
 * Some initial work was put in to generate some custom exceptions, but for the most part, they don't do anything and exception handling is non-existent -- this would be an excellent thing to review.
 * The use of inheritence and interfaces was basically avoided to keep the project small, and as a result, extensibility is limited in this form.
 * No attempt was made at handling links or other exotic files.
+* The code is a bit messy and could use cleanup if put to use in the future (e.g. lots of conversion between String's and Path's and File's that's probably not really necessary)
 
 ### Configuration and Output
 
@@ -51,6 +52,23 @@ There are two properties file:
 
 * /src/main/resources/config.properties -- configure the 2 directories primarily
 * /src/main/resources/log4j.properties -- logging setup
+
+The output of the logger will tell you when the program is starting, stopping or performing a sync operation. To see all the inner processes in action, set filter.threshold.level = debug in your log4j.properties file. You'll see the logic for ignoring events, and other things.
+
+When it starts it should look like this:
+
+```
+Daniels-MacBook-Pro:lightsync danielpacker$ gradle build run
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Task :run
+2018-06-08 10:12:38 INFO  SyncConfig:29 - Configuration loaded from: src/main/resources/config.properties
+2018-06-08 10:12:38 INFO  SyncApp:28 - Starting LightSync. Running on 'MAC' OS.
+2018-06-08 10:12:38 INFO  SyncTaskManager:51 - Launching recursive scan...
+2018-06-08 10:12:38 INFO  SyncTaskManager:56 - Completed recursive scan!
+2018-06-08 10:12:38 INFO  SyncWatcherWorker:97 - Recursively Watching /tmp/lightsync/dir1 for changes...
+2018-06-08 10:12:38 INFO  SyncWatcherWorker:97 - Recursively Watching /tmp/lightsync/dir2 for changes...
+```
 
 ### Prerequisites
 
