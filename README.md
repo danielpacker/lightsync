@@ -63,10 +63,10 @@ gradle test (runs w/ build as well)
 ### Test Coverage
 
 As of this writing, these are the tests included:
-  0. clean up directories, create base temp dirs
-  1. check that dirs are clean
-  2. create a file in both dirs, startup the recursive sync and make sure both get synced (checks both dirs)
-  3. same as above but with a modification of a file in each dir
+  1. clean up directories, create base temp dirs
+  2. check that dirs are clean
+  3. create a file in both dirs, startup the recursive sync and make sure both get synced (checks both dirs)
+  4. same as above but with a modification of a file in each dir
   5. create a file in both dirs, startup the watcher and make sure both get synced
   6. same as above but for modification
   7. create a dir in both dirs, startup the watcher and make sure both get synced
