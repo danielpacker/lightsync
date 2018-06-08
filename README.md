@@ -120,4 +120,4 @@ Feel free to send me any questions about this code.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details. Keep in mind it contains some modified code form the Oracle examples.
+This project is licensed under the MIT License. Keep in mind it contains some modified code form the Oracle examples.
