@@ -44,7 +44,7 @@ gradle clean build run
 * Some initial work was put in to generate some custom exceptions, but for the most part, they don't do anything and exception handling is non-existent -- this would be an excellent thing to review.
 * The use of inheritence and interfaces was basically avoided to keep the project small, and as a result, extensibility is limited in this form.
 * No attempt was made at handling links or other exotic files.
-* The code is a bit messy and could use cleanup if put to use in the future (e.g. lots of conversion between String's and Path's and File's that's probably not really necessary)
+* The code is a bit messy and could use cleanup if put to use in the future (e.g. lots of conversion between String's and Path's and File's and lots of mixing of old and new Java IO that's probably not ideal)
 
 ### Configuration and Output
 
