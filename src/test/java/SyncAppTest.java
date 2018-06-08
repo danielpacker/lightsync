@@ -23,11 +23,14 @@ public class SyncAppTest {
     private Path dir2;
 
     @Before
-    public void init() {
-        config.setDir1(Paths.get("src", "test", "temp", "test1").toString());
-        config.setDir2(Paths.get("src", "test", "temp", "test2").toString());
+    public void init() throws IOException {
+        Path base = Paths.get("src", "test", "temp");
+        config.setDir1(Paths.get(base.toString(), "test1").toString());
+        config.setDir2(Paths.get(base.toString(), "test2").toString());
         dir1 = Paths.get(config.getDir1());
         dir2 = Paths.get(config.getDir2());
+        if (!Files.exists(base))
+            Files.createDirectory(base);
     }
 
     @Test
