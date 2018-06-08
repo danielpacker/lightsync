@@ -6,7 +6,7 @@ Simple and lightweight bidirectional folder sync using Java 8. Tested on OSX 10.
 
 ## Getting Started
 
-Just clone the github project, cd into the directory, and run bootRun to build and start the application:
+Clone the github project, cd into the directory, and 'gradle clean build run' to start the application:
 
 * git clone https://github.com/danielpacker/lightsync.git
 
