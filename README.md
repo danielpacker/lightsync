@@ -74,6 +74,12 @@ As of this writing, these are the tests included:
 
 It's worth mentioning that in each test the Task Manager is asked to stop the worker threads at the end of each test so that the next test can start them back up to make each test stand-alone.
 
+## FAQ
+
+**How do I add support for my OS?**
+
+As mentioned above, only mac and Linux are currently supported, but you could add your OS to the list of supported OS's in SyncApp.java, and implement additional processing logic in SyncWatcherWorker to make it happen. With luck other OS's such as Windows would be very easy to port. 
+
 ## Built With
 
 * Gradle
@@ -81,6 +87,8 @@ It's worth mentioning that in each test the Task Manager is asked to stop the wo
 * log4j2
 
 ## Authors
+
+Feel free to send me any questions about this code.
 
 * **Daniel Packer** - *Author* - [Daniel Packer](https://github.com/danielpacker)
 
