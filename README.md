@@ -72,7 +72,7 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 
 ### Prerequisites
 
-The only prerequisites are Java 8 SE and the Java 8 SDK. Untested on other versions, but may work.
+The only prerequisites are Java 8 SE and the Java 8 SDK. Untested on other versions, but may work. Any compilation dependencies will be pulled in via MavenCentral/gradle. The only external dependency is log4j.
 
 ## Running the tests
 
