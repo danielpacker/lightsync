@@ -35,7 +35,7 @@ gradle clean build run
 * The main feature of this app is that it has an extremely low memory and cpu footprint.
   - Use of streams for processing directories cuts down on memory usage as opposed to stateful tables, maps, etc.
   - Use of the watch service cuts down on memory and useage as compares to traditional recursive polling methods. This is because for some OS's, it can use the native kernel monitoring e.g. iNotify on Linux. Sadly on mac, it uses polling under the hood AFAIK.
-  - I was able to general 10k files with a 1ms delay between each create and the sync was done almost as soon as the files were done being generated (a few seconds) -- performance is quite good with the caveat of overflows mentioned below.
+  - On my mac laptop I was able to generate 10k files with a 1ms delay between each create and the sync was done almost as soon as the files were done being generated (a few seconds) -- performance is quite good with the caveat of overflows mentioned below. Linux should perform even better.
 * There are several limitations to this software
   1. Only mac and Linux are supported so far, due to how each OS implements polling differently via the Java watch service.
   2. Only 2 directories can be synced, configured in the config.properties file. The code could be easily generalized to an arbitrary number of pairs, left as an exercise for the reader.
