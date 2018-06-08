@@ -70,7 +70,7 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 2018-06-08 10:12:38 INFO  SyncWatcherWorker:97 - Recursively Watching /tmp/lightsync/dir2 for changes...
 ```
 
-Here's some output for a remove task. The dst (in dir2) is being removed since the src (in dir1) was manually removed:
+Here's some output for a copy task. A new file has been added in dir1 and is being sync'd to dir2:
 
 ```
 2018-06-08 11:02:13 INFO  SyncTaskDoerWorker:86 - Doing task: Type: CP, Src: /tmp/lightsync/dir1/new_file.txt, Dst: /tmp/lightsync/dir2/new_file.txt
