@@ -70,6 +70,14 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 2018-06-08 10:12:38 INFO  SyncWatcherWorker:97 - Recursively Watching /tmp/lightsync/dir2 for changes...
 ```
 
+Here's some output for a remove task. The dst (in dir2) is being removed since the src (in dir1) was manually removed:
+
+```
+2018-06-08 11:02:13 INFO  SyncTaskDoerWorker:86 - Doing task: Type: CP, Src: /tmp/lightsync/dir1/new_file.txt, Dst: /tmp/lightsync/dir2/new_file.txt
+```
+
+The output for the other operations is very similar. Logs should contain every operation done for easy audits.
+
 ### Prerequisites
 
 The only prerequisites are Java 8 SE and the Java 8 SDK. Untested on other versions, but may work. Any compilation dependencies will be pulled in via MavenCentral/gradle. The only external dependency is log4j.
