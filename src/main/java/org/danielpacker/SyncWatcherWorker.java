@@ -1,6 +1,9 @@
 package org.danielpacker;
 
-/* Code heavily based on Oracle's WatchDir example. */
+/**
+ * This class started as an oracle example class, and was retrofitted to be a Callable
+ * along with a bunch of logic for queing tasks based on incoming events.
+ */
 
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import org.apache.logging.log4j.LogManager;
@@ -15,9 +18,6 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
-/**
- * Example to watch a directory (or tree) for changes to files.
- */
 
 public class SyncWatcherWorker implements Callable<Void> {
 

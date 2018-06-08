@@ -1,5 +1,11 @@
 package org.danielpacker;
 
+/**
+ * The main application class.
+ * Validates the current OS, launches producers and consumers
+ * via the Task Manager controller.
+ */
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

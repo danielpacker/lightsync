@@ -1,5 +1,10 @@
 package org.danielpacker;
 
+/**
+ * Consumes sync tasks from the queue and performs file operations
+ * to fulfill those tasks.
+ */
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

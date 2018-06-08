@@ -1,5 +1,10 @@
 package org.danielpacker;
 
+/**
+ * A service controller class that starts up, shuts down, or monitors workers.
+ * Maintains "futures" and thread pools for each worker type for interaction.
+ */
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

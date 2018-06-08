@@ -1,5 +1,11 @@
 package org.danielpacker;
 
+/**
+ * This can be used in a thread, but that's not really necessary.
+ * Performs a recursive sync between two folders and generates sync tasks.
+ * Runs on startup and when done, the watcher worker takes over producing tasks.
+ */
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
