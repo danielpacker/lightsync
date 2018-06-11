@@ -7,7 +7,6 @@ package org.danielpacker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,17 +14,16 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-
 import static java.nio.file.StandardCopyOption.*;
+
 
 public class SyncTaskDoerWorker implements Callable<Void> {
 
     private static final Logger log = LogManager.getLogger(SyncTaskDoerWorker.class);
-
-    private Path dir1;
-    private Path dir2;
-    BlockingQueue<SyncTask> q;
-    SyncConfig config;
+    private final BlockingQueue<SyncTask> q;
+    private final SyncConfig config;
+    private final Path dir1;
+    private final Path dir2;
 
     SyncTaskDoerWorker(SyncConfig config, BlockingQueue<SyncTask> q) {
 
@@ -35,20 +33,20 @@ public class SyncTaskDoerWorker implements Callable<Void> {
         this.config = config;
     }
 
-    void doCP(SyncTask cpTask) throws IOException {
+    private void doCP(SyncTask cpTask) throws IOException {
         Files.copy(cpTask.getSrc(), cpTask.getDst(), REPLACE_EXISTING, COPY_ATTRIBUTES);
     }
 
-    void doRM(SyncTask rmTask) throws IOException {
+    private void doRM(SyncTask rmTask) throws IOException {
         Files.deleteIfExists(rmTask.getDst());
     }
 
-    void doMKDIR(SyncTask mkdirTask) throws IOException {
-        if (! Files.exists(mkdirTask.getDst()))
+    private void doMKDIR(SyncTask mkdirTask) throws IOException {
+        if (!Files.exists(mkdirTask.getDst()))
             Files.createDirectory(mkdirTask.getDst());
     }
 
-    void doRMDIR(SyncTask rmdirTask) throws IOException {
+    private void doRMDIR(SyncTask rmdirTask) throws IOException {
 
         Files.walk(rmdirTask.getDst())
                 .sorted(Comparator.reverseOrder())
@@ -57,42 +55,46 @@ public class SyncTaskDoerWorker implements Callable<Void> {
                 .forEach(File::delete);
     }
 
-
     // Sanity check any path we're about to operate on and
     //  make sure the root of the path is from the config.
-    boolean taskPathsInConfig(SyncTask task) {
+    private boolean taskPathsInConfig(SyncTask task) {
 
         boolean inConfig = true;
 
         if (
-            task.getSrc().toString().indexOf(config.getDir1()) != 0 &&
-            task.getSrc().toString().indexOf(config.getDir2()) != 0
-        ) return false;
+                task.getSrc().toString().indexOf(config.getDir1()) != 0 &&
+                        task.getSrc().toString().indexOf(config.getDir2()) != 0
+                ) return false;
 
         if (
-            task.getDst().toString().indexOf(config.getDir1()) != 0 &&
-            task.getDst().toString().indexOf(config.getDir2()) != 0
-        ) return false;
+                task.getDst().toString().indexOf(config.getDir1()) != 0 &&
+                        task.getDst().toString().indexOf(config.getDir2()) != 0
+                ) return false;
 
         return true;
     }
 
-    void doTasks() throws IOException {
+     void doTasks(boolean stopWhenEmpty) {
 
+        // Wrap all the code in try/catch for Interruption/cancellation.
         try {
             while (true) {
+
+                if (stopWhenEmpty && q.isEmpty()) {
+                    log.debug("returning from stopWhenEmpty mode");
+                    return;
+                }
 
                 SyncTask task = q.take();
                 log.info("Doing task: " + task);
 
-                if (! taskPathsInConfig(task)) {
+                if (!taskPathsInConfig(task)) {
                     log.error("Attempted to modify file dor dir outside config params!");
                     log.error("Offending task: " + task);
                     System.exit(1);
                 }
 
                 switch (task.getType()) {
-
                     case CP:
                         doCP(task);
                         break;
@@ -107,24 +109,19 @@ public class SyncTaskDoerWorker implements Callable<Void> {
                         break;
                 }
             }
-        }
-        catch (InterruptedException e) {
-            log.error("SyncTaskDoer thread interrupted: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("File handling exception while doing task!: " + e.getMessage());
+            log.error(e);
+            return;
+        } catch (InterruptedException e) {
+            log.debug("SyncTaskDoer thread interrupted. Stopping.");
+            Thread.currentThread().interrupt();
         }
     }
 
-
     @Override
     public Void call() {
-
-        try {
-            doTasks();
-        }
-        catch (IOException e) {
-            log.error("File problem while doing task: " + e.getMessage());
-            e.printStackTrace();
-        }
-
+        doTasks(false);
         return null;
     }
 }

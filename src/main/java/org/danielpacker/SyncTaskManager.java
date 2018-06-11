@@ -8,24 +8,22 @@ package org.danielpacker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.concurrent.*;
 
 
 public class SyncTaskManager {
 
     private static final Logger log = LogManager.getLogger(SyncTaskManager.class);
-
-    // Task queue
     private static BlockingQueue<SyncTask> q = new LinkedBlockingQueue<>();
-
-    // Threads
-    private ExecutorService watcherPool = Executors.newSingleThreadExecutor();
-    private ExecutorService doerPool = Executors.newSingleThreadExecutor();
+    private final ScheduledExecutorService checkOverflowPool = Executors.newScheduledThreadPool(1);
+    private final ExecutorService recursivePool = Executors.newSingleThreadExecutor();
+    private final ExecutorService watcherPool = Executors.newSingleThreadExecutor();
+    private final ExecutorService doerPool = Executors.newSingleThreadExecutor();
+    private Future<?> recursiveFuture;
     private Future<?> doerFuture;
     private Future<?> watcherFuture;
-
-    private SyncConfig config;
+    private final SyncConfig config;
+    private static boolean overflowed = false;
 
     public SyncTaskManager(SyncConfig config) {
 
@@ -37,43 +35,64 @@ public class SyncTaskManager {
         log.info("Task manager is shutting down watch and doer workers...");
         if (watcherFuture != null)
             watcherFuture.cancel(true);
+
         watcherPool.shutdownNow();
 
         if (doerFuture != null)
             doerFuture.cancel(true);
+
         doerPool.shutdownNow();
         log.info("Shutdown complete.");
     }
 
-    // Run in main thread to avoid having to manage other threads
+    // Run in main thread for initial scan/catchup mode.
     public void recursiveScan() {
 
-        log.info("Launching recursive scan...");
-        //pool.execute(new RecursiveScanner(config, q));
-        RecursiveScanner rs = new RecursiveScanner(config, q);
-        rs.run();
-        //displayTasks();
-        log.info("Completed recursive scan!");
+        // Scan for file changes
+        new RecursiveScanner(config, q).doScan();
+
+        // Perform catch-up file operations
+        new SyncTaskDoerWorker(config, q).doTasks(true);
     }
 
     public void startWatcherWorker() {
 
         if (watcherFuture == null || watcherFuture.isDone() || watcherFuture.isCancelled())
-            try {
-                watcherFuture = watcherPool.submit(new SyncWatcherWorker(config, q, true));
-                //new Thread(new SyncWatcherWorker(config, q, true)).start();
-            }
-            catch (IOException e) {
-                log.error("File exception during watching: " + e.getMessage());
-            }
+            watcherFuture = watcherPool.submit(new SyncWatcherWorker(config, q, true));
+
+        // Periodically check for an OVERFLOW exception in the watcher
+        checkForOverflow();
     }
 
     public void startDoerWorker() {
 
         if (doerFuture == null || doerFuture.isDone() || doerFuture.isCancelled())
             doerFuture = doerPool.submit(new SyncTaskDoerWorker(config, q));
-        //new Thread(new SyncTaskDoerWorker(config, q));
     }
+
+    public void checkForOverflow() {
+
+        // periodically check whether the watcher thread experienced an OVERFLOW
+        checkOverflowPool.scheduleAtFixedRate(()->{
+            log.trace("checking if watcher future done");
+            if (watcherFuture.isDone())
+                log.trace("watcher future is done");
+                try {
+                    watcherFuture.get();
+                } catch (ExecutionException e) {
+                    Throwable ex = e.getCause();
+                    if (ex instanceof SyncOverflowException) {
+                        log.info("Sync OVERFLOW captured in task mgr. Not yet implemented.");
+                        this.overflowed = true;
+                        System.exit(1);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+        }, 0, 5000, TimeUnit.MILLISECONDS);
+    }
+
+
 
     // Leaving this here for debugging during development.
     public void displayTasks() {

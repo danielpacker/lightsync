@@ -8,15 +8,15 @@ package org.danielpacker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.Arrays;
 import java.util.List;
 import org.danielpacker.SyncUtil.OS;
 
+
 public class SyncApp {
 
     // Load up the configuration
-    private static SyncConfig config = new SyncConfig();
+    private static final SyncConfig config = new SyncConfig();
 
     private static final Logger log = LogManager.getLogger(SyncApp.class);
 
@@ -28,7 +28,7 @@ public class SyncApp {
         log.info("Starting LightSync. Running on '" + SyncUtil.getOS().name() + "' OS.");
 
         if (!supportedOS.contains(SyncUtil.getOS())) {
-            log.error("Exiting - LightSync does support OS: " +  SyncUtil.getOS().name());
+            log.error("Exiting - LightSync does not support OS: " +  SyncUtil.getOS().name());
             System.exit(1);
         }
 

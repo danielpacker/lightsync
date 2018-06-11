@@ -4,21 +4,19 @@ import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SyncAppTest {
 
-    private static SyncConfig config = new SyncConfig();
-
+    private final SyncConfig config = new SyncConfig();
     private Path dir1;
     private Path dir2;
 

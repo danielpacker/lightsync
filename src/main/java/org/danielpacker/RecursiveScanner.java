@@ -14,15 +14,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 
 
-public class RecursiveScanner implements Runnable {
+public class RecursiveScanner implements Callable<Void> {
 
     private static final Logger log = LogManager.getLogger(RecursiveScanner.class);
-
-    private Path dir1;
-    private Path dir2;
-    Queue<SyncTask> q;
+    private final Path dir1;
+    private final Path dir2;
+    private final Queue<SyncTask> q;
 
     RecursiveScanner(SyncConfig config, Queue<SyncTask> q) {
 
@@ -31,27 +31,35 @@ public class RecursiveScanner implements Runnable {
         this.q = q;
     }
 
-    void doScan() throws IOException {
+    void doScan() {
 
-        Files.walk(dir1)
-                .forEach(path -> {
-                    try {
-                        addTaskIfNeeded(path, dir1, dir2);
-                    }
-                    catch (IOException e) {
-                        log.error("Problem adding tasks in recursive search: " + e.getMessage());
-                    }
-                });
+        log.debug("starting recursive scan...");
 
-        Files.walk(dir2)
-                .forEach(path -> {
-                    try {
-                        addTaskIfNeeded(path, dir2, dir1);
-                    }
-                    catch (IOException e) {
-                        log.error("Problem adding tasks in recursive search: " + e.getMessage());
-                    }
-                });
+        try {
+            Files.walk(dir1)
+                    .forEach(path -> {
+                        try {
+                            addTaskIfNeeded(path, dir1, dir2);
+                        } catch (IOException e) {
+                            log.error("Problem adding tasks in recursive search: " + e.getMessage());
+                        }
+                    });
+
+            Files.walk(dir2)
+                    .forEach(path -> {
+                        try {
+                            addTaskIfNeeded(path, dir2, dir1);
+                        } catch (IOException e) {
+                            log.error("Problem adding tasks in recursive search: " + e.getMessage());
+                        }
+                    });
+        }
+        catch (IOException e) {
+            log.error("IO problem in recursive sync: " + e.getMessage());
+            log.error("Stacktrace:", e);
+        }
+
+        log.debug("recursive scan complete.");
     }
 
     private void addTask(SyncTask.TYPE type, Path src, Path dst) {
@@ -94,16 +102,9 @@ public class RecursiveScanner implements Runnable {
         }
     }
 
+    public Void call() {
 
-    @Override
-    public void run() {
-
-        try {
-            doScan();
-
-        }
-        catch (IOException e) {
-            log.error("File problem in recursive sync: " + e.getMessage());
-        }
+        doScan();
+        return null;
     }
 }
