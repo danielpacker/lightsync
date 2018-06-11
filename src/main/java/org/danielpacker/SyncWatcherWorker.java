@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 public class SyncWatcherWorker implements Callable<Void> {
 
     private static final Logger log = LogManager.getLogger(SyncWatcherWorker.class);
+    private final SyncStats stats;
     private final SyncConfig config;
     private WatchService watcher = null;
     private final Map<WatchKey,Path> keys;
@@ -80,7 +81,7 @@ public class SyncWatcherWorker implements Callable<Void> {
     /**
      * Creates a WatchService and registers the given directory
      */
-    SyncWatcherWorker(SyncConfig config, BlockingQueue<SyncTask> q, boolean recursive) {
+    SyncWatcherWorker(SyncConfig config, BlockingQueue<SyncTask> q, boolean recursive, SyncStats stats) {
         this.config = config;
         this.q = q;
         dir1 = Paths.get(config.getDir1());
@@ -88,6 +89,7 @@ public class SyncWatcherWorker implements Callable<Void> {
         this.keys = new HashMap<>();
         this.recursive = recursive;
         Path[] dirs = { dir1, dir2 };
+        this.stats = stats;
 
         try {
             this.watcher = FileSystems.getDefault().newWatchService();
@@ -234,8 +236,10 @@ public class SyncWatcherWorker implements Callable<Void> {
                         equivPath = SyncUtil.srcTodestPath(child, dir2, dir1);
 
                     try {
-                        if (taskIsNeeded(event.kind().name(), child, equivPath))
+                        if (taskIsNeeded(event.kind().name(), child, equivPath)) {
                             addTask(event.kind().name(), child, equivPath);
+                            stats.setNumTasksQueued(stats.getNumTasksQueued() + 1);
+                        }
                     }
                     catch (IOException e) {
                         log.error("File exception during watching: " + e.getMessage());

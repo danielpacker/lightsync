@@ -20,17 +20,19 @@ import static java.nio.file.StandardCopyOption.*;
 public class SyncTaskDoerWorker implements Callable<Void> {
 
     private static final Logger log = LogManager.getLogger(SyncTaskDoerWorker.class);
+    private final SyncStats stats;
     private final BlockingQueue<SyncTask> q;
     private final SyncConfig config;
     private final Path dir1;
     private final Path dir2;
 
-    SyncTaskDoerWorker(SyncConfig config, BlockingQueue<SyncTask> q) {
+    SyncTaskDoerWorker(SyncConfig config, BlockingQueue<SyncTask> q, SyncStats stats) {
 
         dir1 = Paths.get(config.getDir1());
         dir2 = Paths.get(config.getDir2());
         this.q = q;
         this.config = config;
+        this.stats = stats;
     }
 
     private void doCP(SyncTask cpTask) throws IOException {
@@ -108,6 +110,8 @@ public class SyncTaskDoerWorker implements Callable<Void> {
                         doRMDIR(task);
                         break;
                 }
+
+                stats.setNumTasksCompleted(stats.getNumTasksCompleted()+1);
             }
         } catch (IOException e) {
             log.error("File handling exception while doing task!: " + e.getMessage());

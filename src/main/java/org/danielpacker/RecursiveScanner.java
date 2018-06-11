@@ -20,15 +20,17 @@ import java.util.concurrent.Callable;
 public class RecursiveScanner implements Callable<Void> {
 
     private static final Logger log = LogManager.getLogger(RecursiveScanner.class);
+    private final SyncStats stats;
     private final Path dir1;
     private final Path dir2;
     private final Queue<SyncTask> q;
 
-    RecursiveScanner(SyncConfig config, Queue<SyncTask> q) {
+    RecursiveScanner(SyncConfig config, Queue<SyncTask> q, SyncStats stats) {
 
         dir1 = Paths.get(config.getDir1());
         dir2 = Paths.get(config.getDir2());
         this.q = q;
+        this.stats = stats;
     }
 
     void doScan() {
@@ -66,14 +68,10 @@ public class RecursiveScanner implements Callable<Void> {
 
         SyncTask task = new SyncTask(type, src, dst);
         q.add(task);
+        stats.setNumTasksQueued(stats.getNumTasksQueued()+1);
     }
 
     private void addTaskIfNeeded(Path path, Path src, Path dst) throws IOException {
-        /*
-        System.out.println("Path: " + path + ", Src: " + src + ", Dest: "
-                + dst + ", Norm: " + SyncUtil.normalizePath(path, src)
-                + ", DestPath: " + SyncUtil.srcTodestPath(path, src, dst));
-        */
 
         Path destPath = SyncUtil.srcTodestPath(path, src, dst);
 

@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 public class SyncTaskManager {
 
     private static final Logger log = LogManager.getLogger(SyncTaskManager.class);
+    private static final SyncStats stats = new SyncStats();
     private static BlockingQueue<SyncTask> q = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService checkOverflowPool = Executors.newScheduledThreadPool(1);
     private final ExecutorService watcherPool = Executors.newSingleThreadExecutor();
@@ -47,16 +48,16 @@ public class SyncTaskManager {
     public void recursiveScan() {
 
         // Scan for file changes
-        new RecursiveScanner(config, q).doScan();
+        new RecursiveScanner(config, q, stats).doScan();
 
         // Perform catch-up file operations
-        new SyncTaskDoerWorker(config, q).doTasks(true);
+        new SyncTaskDoerWorker(config, q, stats).doTasks(true);
     }
 
     public void startWatcherWorker() {
 
         if (watcherFuture == null || watcherFuture.isDone() || watcherFuture.isCancelled())
-            watcherFuture = watcherPool.submit(new SyncWatcherWorker(config, q, true));
+            watcherFuture = watcherPool.submit(new SyncWatcherWorker(config, q, true, stats));
 
         // Periodically check for an OVERFLOW exception in the watcher
         checkForOverflow();
@@ -65,16 +66,17 @@ public class SyncTaskManager {
     public void startDoerWorker() {
 
         if (doerFuture == null || doerFuture.isDone() || doerFuture.isCancelled())
-            doerFuture = doerPool.submit(new SyncTaskDoerWorker(config, q));
+            doerFuture = doerPool.submit(new SyncTaskDoerWorker(config, q, stats));
     }
 
     public void checkForOverflow() {
 
         // periodically check whether the watcher thread experienced an OVERFLOW
+        // (also display stats)
         checkOverflowPool.scheduleAtFixedRate(()->{
-            log.trace("checking if watcher future done");
+            log.debug("checking if watcher future done");
             if (watcherFuture.isDone())
-                log.trace("watcher future is done");
+                log.debug("watcher future is done");
                 try {
                     watcherFuture.get();
                 } catch (ExecutionException e) {
@@ -90,10 +92,12 @@ public class SyncTaskManager {
         }, 0, 5000, TimeUnit.MILLISECONDS);
     }
 
-
+    void displayStats() {
+        log.info(stats);
+    }
 
     // Leaving this here for debugging during development.
-    public void displayTasks() {
+    void displayTasks() {
 
         SyncTask[] tasks = new SyncTask[q.size()];
         tasks = q.toArray(tasks);

@@ -43,5 +43,13 @@ public class SyncApp {
 
         // Watch for real-time events and produce tasks
         taskMgr.startWatcherWorker();
+
+        // Display stats on exit
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                taskMgr.displayStats();
+                taskMgr.shutDown();
+            };
+        });
     }
 }
