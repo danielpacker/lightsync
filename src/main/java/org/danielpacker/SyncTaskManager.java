@@ -16,10 +16,8 @@ public class SyncTaskManager {
     private static final Logger log = LogManager.getLogger(SyncTaskManager.class);
     private static BlockingQueue<SyncTask> q = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService checkOverflowPool = Executors.newScheduledThreadPool(1);
-    private final ExecutorService recursivePool = Executors.newSingleThreadExecutor();
     private final ExecutorService watcherPool = Executors.newSingleThreadExecutor();
     private final ExecutorService doerPool = Executors.newSingleThreadExecutor();
-    private Future<?> recursiveFuture;
     private Future<?> doerFuture;
     private Future<?> watcherFuture;
     private final SyncConfig config;
